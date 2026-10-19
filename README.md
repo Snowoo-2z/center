@@ -18,6 +18,20 @@ compiled with **Native AOT**.
   (MSVC linker + Windows SDK — required by Native AOT)
 - [Ollama](https://ollama.com) with `qwen2.5:1.5b`
 
+## Check Ollama
+
+```powershell
+.\scripts\check-ollama.ps1
+```
+
+Verifies the daemon, the model and a real NDJSON stream (what the app consumes).
+
+> Windows PowerShell 5.1 strips the double quotes of arguments passed to native
+> executables: `curl.exe ... -d '{"model":"x"}'` reaches curl as `{model:x}` and
+> Ollama answers `invalid character 'm' looking for beginning of object key string`.
+> Escape the quotes (`'{\"model\":\"x\"}'`), use a JSON file (`-d "@body.json"`) or
+> `Invoke-RestMethod`.
+
 ## Run (development)
 
 ```powershell
@@ -39,6 +53,7 @@ in the conversation that generated this repository.
 ## Layout
 
 ```
+scripts/check-ollama.ps1   daemon + model + streaming health check
 src/Center/
 ├── Center.csproj          Native AOT + trimming configuration
 ├── Program.cs             AppBuilder entry point
