@@ -47,6 +47,17 @@ dotnet run --project .\src\Center\Center.csproj
 .\publish.ps1 -SingleFile        # literally one self-contained .exe (JIT)
 ```
 
+`-SingleFile` needs only the .NET 9 SDK (no C++ toolchain). The default Native
+AOT build also needs Visual Studio 2022 Build Tools with **Desktop development
+with C++** (MSVC linker + Windows SDK).
+
+> **Script encoding:** both `.ps1` files are plain ASCII (saved as UTF-8 with
+> BOM) on purpose. Windows PowerShell 5.1 reads BOM-less scripts as ANSI/cp1252:
+> em-dashes (`—`) and check marks (`✓`) then decode to smart quote bytes, which
+> PowerShell treats as string delimiters, and the script dies with
+> `The string terminator " is missing in the string`. Keep the `.ps1` files
+> ASCII, or at minimum UTF-8 **with BOM**.
+
 Full step-by-step instructions (Ollama, toolchain, troubleshooting) are provided
 in the conversation that generated this repository.
 
