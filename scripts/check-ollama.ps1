@@ -1,8 +1,13 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
+# Encoding: this file is plain ASCII on purpose. Windows PowerShell 5.1 reads
+# BOM-less .ps1 files as ANSI/cp1252; em-dashes, check marks and other non-ASCII
+# punctuation then decode to smart quote bytes ("), which PowerShell treats as
+# string delimiters -> parser error: the string terminator " is missing.
+# Keep this file ASCII (or at least UTF-8 with BOM) when editing it.
 <#
 .SYNOPSIS
-    Vérifie qu'Ollama répond, que le modèle est installé et que le streaming
-    NDJSON fonctionne — exactement le chemin utilisé par Center.
+    Verifie qu'Ollama repond, que le modele est installe et que le streaming
+    NDJSON fonctionne - exactement le chemin utilise par Center.
 
 .EXAMPLE
     .\scripts\check-ollama.ps1
@@ -33,39 +38,39 @@ function Fail([string]$Text) {
 # ----------------------------------------------------------------------
 # 1. Daemon
 # ----------------------------------------------------------------------
-Write-Step "1/3  Ollama — $Endpoint"
+Write-Step "1/3  Ollama - $Endpoint"
 
 try {
     $tags = Invoke-RestMethod -Uri "$Endpoint/api/tags" -TimeoutSec 5
 }
 catch {
-    Fail "Ollama ne répond pas. Lance 'ollama serve' (ou ouvre l'application Ollama)."
+    Fail "Ollama ne repond pas. Lance 'ollama serve' (ou ouvre l'application Ollama)."
 }
 
 $names = @($tags.models | ForEach-Object { $_.name })
 if ($names.Count -eq 0) {
-    Fail "Aucun modèle installé. Lance : ollama pull $Model"
+    Fail "Aucun modele installe. Lance : ollama pull $Model"
 }
 
-Write-Host ("   ok  {0} modèle(s) : {1}" -f $names.Count, ($names -join ', ')) -ForegroundColor Green
+Write-Host ("   ok  {0} modele(s) : {1}" -f $names.Count, ($names -join ', ')) -ForegroundColor Green
 
 # ----------------------------------------------------------------------
-# 2. Modèle
+# 2. Modele
 # ----------------------------------------------------------------------
-Write-Step "2/3  Modèle '$Model'"
+Write-Step "2/3  Modele '$Model'"
 
 if ($names -notcontains $Model) {
-    Write-Host "   ! '$Model' n'est pas installé." -ForegroundColor Yellow
+    Write-Host "   ! '$Model' n'est pas installe." -ForegroundColor Yellow
     Write-Host "     ollama pull $Model" -ForegroundColor Yellow
     exit 1
 }
 
-Write-Host "   ok  présent" -ForegroundColor Green
+Write-Host "   ok  present" -ForegroundColor Green
 
 # ----------------------------------------------------------------------
 # 3. Chat
-#    JSON construit à la main : PowerShell 5.1 casse les guillemets
-#    quand on passe du JSON inline à un exécutable natif (curl.exe).
+#    JSON construit a la main : PowerShell 5.1 casse les guillemets
+#    quand on passe du JSON inline a un executable natif (curl.exe).
 # ----------------------------------------------------------------------
 $escapedPrompt = $Prompt.Replace('\', '\\').Replace('"', '\"')
 $streamFlag = if ($NoStream) { 'false' } else { 'true' }
@@ -73,7 +78,7 @@ $json = '{"model":"' + $Model + '","stream":' + $streamFlag +
         ',"messages":[{"role":"user","content":"' + $escapedPrompt + '"}]}'
 
 if ($NoStream) {
-    Write-Step '3/3  Réponse complète'
+    Write-Step '3/3  Reponse complete'
 
     $sw = [Diagnostics.Stopwatch]::StartNew()
     $response = Invoke-RestMethod -Uri "$Endpoint/api/chat" -Method Post `
@@ -104,7 +109,7 @@ else {
 
     if (-not $response.IsSuccessStatusCode) {
         $body = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
-        Fail ("HTTP {0} — {1}" -f ([int]$response.StatusCode), $body)
+        Fail ("HTTP {0} - {1}" -f ([int]$response.StatusCode), $body)
     }
 
     $stream = $response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
@@ -142,10 +147,10 @@ else {
     Write-Host ''
     Write-Host ''
     Write-Host ("   premier token : {0:N0} ms" -f $firstTokenMs) -ForegroundColor DarkGray
-    Write-Host ("   total        : {0:N1} s · {1} chunks · ~{2} tokens ({3:N1} tok/s)" -f `
+    Write-Host ("   total        : {0:N1} s - {1} chunks - ~{2} tokens ({3:N1} tok/s)" -f `
         $sw.Elapsed.TotalSeconds, $chunks, $tokens, $tps) -ForegroundColor DarkGray
 }
 
 Write-Host ''
-Write-Host "   ✓ Ollama est prêt : tu peux lancer Center." -ForegroundColor Green
+Write-Host "   ok  Ollama est pret : tu peux lancer Center." -ForegroundColor Green
 Write-Host ''
