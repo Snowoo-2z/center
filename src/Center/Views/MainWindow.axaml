@@ -1,0 +1,340 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Center.ViewModels"
+    xmlns:models="using:Center.Models"
+    xmlns:controls="using:Center.Controls"
+    mc:Ignorable="d"
+    d:DesignWidth="1180"
+    d:DesignHeight="780"
+    x:Class="Center.Views.MainWindow"
+    x:DataType="vm:MainWindowViewModel"
+    x:CompileBindings="True"
+    Title="Center"
+    Width="1180"
+    Height="780"
+    MinWidth="940"
+    MinHeight="640"
+    WindowStartupLocation="CenterScreen"
+    Background="{DynamicResource CanvasBrush}"
+    Foreground="{DynamicResource TextPrimaryBrush}">
+
+  <Grid ColumnDefinitions="272,*">
+
+    <!-- ============================================================
+         SIDEBAR
+         ============================================================ -->
+    <Border Grid.Column="0"
+            Background="{DynamicResource SidebarBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,0,1,0">
+      <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="14,16,14,14">
+
+        <!-- Brand -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="9" Margin="6,2,0,0">
+          <Border Width="26" Height="26" CornerRadius="8" Background="{DynamicResource TextPrimaryBrush}">
+            <TextBlock Text="C"
+                       FontSize="14"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource InkBrush}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center" />
+          </Border>
+          <TextBlock Text="Center" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- New chat -->
+        <Button Grid.Row="1"
+                Margin="0,20,0,0"
+                HorizontalAlignment="Stretch"
+                Theme="{DynamicResource AppButton}"
+                Command="{Binding NewChatCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="9">
+            <Path Data="M12 5v14M5 12h14"
+                  Stroke="{DynamicResource TextSecondaryBrush}"
+                  StrokeThickness="1.7"
+                  StrokeLineCap="Round"
+                  Width="15" Height="15"
+                  Stretch="Uniform"
+                  VerticalAlignment="Center" />
+            <TextBlock Text="Nouveau chat" FontSize="13" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+
+        <!-- Connectors -->
+        <StackPanel Grid.Row="2" Margin="0,24,0,0" Spacing="2">
+          <TextBlock Text="CONNECTEURS" Classes="label" Margin="8,0,0,7" />
+          <ItemsControl ItemsSource="{Binding Connectors}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="models:Connector">
+                <Border Padding="8,7" CornerRadius="9" Background="Transparent" ToolTip.Tip="{Binding Description}">
+                  <Grid ColumnDefinitions="18,*,Auto">
+                    <Path Grid.Column="0"
+                          Data="{Binding Icon}"
+                          Stroke="{DynamicResource TextSecondaryBrush}"
+                          StrokeThickness="1.5"
+                          StrokeLineCap="Round"
+                          StrokeJoin="Round"
+                          Width="15" Height="15"
+                          Stretch="Uniform"
+                          VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Name}"
+                               Margin="9,0,8,0"
+                               FontSize="12.5"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <ToggleButton Grid.Column="2"
+                                  Theme="{DynamicResource SwitchTheme}"
+                                  IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                  IsEnabled="{Binding IsAvailable}"
+                                  VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <!-- History -->
+        <Grid Grid.Row="3" RowDefinitions="Auto,*" Margin="0,24,0,0">
+          <TextBlock Grid.Row="0" Text="HISTORIQUE" Classes="label" Margin="8,0,0,7" />
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" AllowAutoHide="True">
+            <ItemsControl ItemsSource="{Binding Conversations}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="models:Conversation">
+                  <Button Theme="{DynamicResource AppButton}"
+                          Command="{Binding SelectCommand}"
+                          Classes.active="{Binding IsActive}"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Left"
+                          Padding="9,7"
+                          Margin="0,1">
+                    <TextBlock Text="{Binding Title}"
+                               FontSize="12.5"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+
+        <!-- Ollama status -->
+        <Border Grid.Row="4" Margin="0,12,0,0" Padding="9,8" CornerRadius="9"
+                Background="{DynamicResource SurfaceBrush}">
+          <Grid ColumnDefinitions="Auto,*">
+            <Ellipse Grid.Column="0" Width="7" Height="7"
+                     Fill="{Binding OllamaStatusBrush}"
+                     VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1"
+                       Text="{Binding OllamaStatusText}"
+                       Margin="8,0,0,0"
+                       FontSize="11.5"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       Foreground="{DynamicResource TextSecondaryBrush}" />
+          </Grid>
+        </Border>
+      </Grid>
+    </Border>
+
+    <!-- ============================================================
+         CHAT
+         ============================================================ -->
+    <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
+
+      <!-- Header -->
+      <Border Grid.Row="0" Padding="22,14,22,8">
+        <Border HorizontalAlignment="Center" Padding="10,4" CornerRadius="20"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <Ellipse Width="6" Height="6" Fill="{Binding OllamaStatusBrush}" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding ModelLabel}" FontSize="11.5"
+                       Foreground="{DynamicResource TextSecondaryBrush}" />
+          </StackPanel>
+        </Border>
+      </Border>
+
+      <!-- Transcript -->
+      <ScrollViewer Grid.Row="1" x:Name="ChatScroll"
+                    VerticalScrollBarVisibility="Auto"
+                    AllowAutoHide="True">
+        <Grid MaxWidth="760" Margin="24,10,24,14" HorizontalAlignment="Stretch">
+          <StackPanel>
+
+            <!-- Empty state -->
+            <StackPanel IsVisible="{Binding IsEmpty}" Margin="0,70,0,0" Spacing="12">
+              <TextBlock Text="Bonjour."
+                         FontFamily="Georgia"
+                         FontSize="34"
+                         HorizontalAlignment="Center" />
+              <TextBlock Text="Que voulez-vous explorer aujourd'hui ?"
+                         FontSize="14"
+                         HorizontalAlignment="Center"
+                         Foreground="{DynamicResource TextSecondaryBrush}" />
+            </StackPanel>
+
+            <!-- Messages -->
+            <ItemsControl ItemsSource="{Binding ActiveConversation.Messages}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="22" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="models:ChatMessage">
+                  <Border Classes.user="{Binding IsUser}" Classes.assistant="{Binding IsAssistant}">
+                    <StackPanel Spacing="8">
+
+                      <!-- Author -->
+                      <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsAssistant}">
+                        <Border Width="22" Height="22" CornerRadius="11" Background="{DynamicResource TextPrimaryBrush}">
+                          <TextBlock Text="C" FontSize="11" FontWeight="Bold"
+                                     Foreground="{DynamicResource InkBrush}"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="Center" FontSize="12" FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                        <TextBlock Text="{Binding Status}" FontSize="11"
+                                   VerticalAlignment="Center"
+                                   IsVisible="{Binding HasStatus}"
+                                   Foreground="{DynamicResource TextMutedBrush}" />
+                      </StackPanel>
+
+                      <!-- Live stream (plain text, cheap) -->
+                      <TextBlock Text="{Binding Content}"
+                                 IsVisible="{Binding IsStreaming}"
+                                 TextWrapping="Wrap"
+                                 FontSize="14"
+                                 LineHeight="22" />
+
+                      <!-- Finished message (rich) -->
+                      <controls:MarkdownView Markdown="{Binding Content}"
+                                             IsVisible="{Binding IsNotStreaming}" />
+
+                      <!-- Typing indicator -->
+                      <StackPanel Orientation="Horizontal" Spacing="5"
+                                  IsVisible="{Binding IsThinking}"
+                                  Classes="thinking"
+                                  Margin="0,2,0,0">
+                        <Ellipse Width="5" Height="5" Fill="{DynamicResource TextMutedBrush}" />
+                        <Ellipse Width="5" Height="5" Fill="{DynamicResource TextMutedBrush}" />
+                        <Ellipse Width="5" Height="5" Fill="{DynamicResource TextMutedBrush}" />
+                      </StackPanel>
+
+                      <!-- Web sources -->
+                      <StackPanel Spacing="2" IsVisible="{Binding HasSources}" Margin="0,4,0,0">
+                        <TextBlock Text="SOURCES" Classes="label" Margin="0,2,0,3" />
+                        <ItemsControl ItemsSource="{Binding Sources}">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                              <StackPanel Spacing="1" />
+                            </ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:WebSource">
+                              <Button Theme="{DynamicResource AppButton}"
+                                      Command="{Binding OpenCommand}"
+                                      Padding="6,3"
+                                      HorizontalContentAlignment="Left">
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                  <Path Data="M14 4h6v6 M20 4l-9 9 M20 14v6H4V4h6"
+                                        Stroke="{DynamicResource TextMutedBrush}"
+                                        StrokeThickness="1.4"
+                                        StrokeLineCap="Round"
+                                        Width="11" Height="11"
+                                        Stretch="Uniform"
+                                        VerticalAlignment="Center" />
+                                  <TextBlock Text="{Binding Title}"
+                                             FontSize="11.5"
+                                             MaxWidth="420"
+                                             TextTrimming="CharacterEllipsis"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource TextMutedBrush}" />
+                                </StackPanel>
+                              </Button>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+          </StackPanel>
+        </Grid>
+      </ScrollViewer>
+
+      <!-- Composer -->
+      <Grid Grid.Row="2" Margin="24,6,24,16">
+        <StackPanel MaxWidth="760" HorizontalAlignment="Stretch" Spacing="8">
+          <Border Background="{DynamicResource SurfaceBrush}"
+                  BorderBrush="{DynamicResource BorderStrongBrush}"
+                  BorderThickness="1"
+                  CornerRadius="16"
+                  Padding="16,12,10,10">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBox Grid.Column="0"
+                       x:Name="Composer"
+                       Classes="composer"
+                       Text="{Binding Input, Mode=TwoWay}"
+                       Watermark="Écrivez votre message…"
+                       AcceptsReturn="True"
+                       TextWrapping="Wrap"
+                       MinHeight="24"
+                       MaxHeight="180"
+                       Padding="0,4,12,4"
+                       FontSize="14"
+                       Background="Transparent"
+                       BorderThickness="0"
+                       CaretBrush="{DynamicResource TextPrimaryBrush}"
+                       SelectionBrush="#3DFFFFFF"
+                       KeyDown="OnComposerKeyDown" />
+
+              <Panel Grid.Column="1" VerticalAlignment="Bottom">
+                <Button Theme="{DynamicResource PrimaryButton}"
+                        Command="{Binding SendCommand}"
+                        IsVisible="{Binding IsNotBusy}"
+                        Width="34" Height="34"
+                        ToolTip.Tip="Envoyer (Entrée)">
+                  <Path Data="M12 19V5M5 12l7-7 7 7"
+                        Stroke="{DynamicResource InkBrush}"
+                        StrokeThickness="1.8"
+                        StrokeLineCap="Round"
+                        StrokeJoin="Round"
+                        Width="16" Height="16"
+                        Stretch="Uniform" />
+                </Button>
+                <Button Theme="{DynamicResource PrimaryButton}"
+                        Command="{Binding StopCommand}"
+                        IsVisible="{Binding IsBusy}"
+                        Width="34" Height="34"
+                        ToolTip.Tip="Arrêter la génération">
+                  <Path Data="M7 7h10v10H7z"
+                        Fill="{DynamicResource InkBrush}"
+                        Width="11" Height="11"
+                        Stretch="Uniform" />
+                </Button>
+              </Panel>
+            </Grid>
+          </Border>
+
+          <TextBlock Text="Entrée pour envoyer · Maj+Entrée pour une nouvelle ligne · tout reste sur votre machine"
+                     FontSize="11"
+                     HorizontalAlignment="Center"
+                     Foreground="{DynamicResource TextMutedBrush}" />
+        </StackPanel>
+      </Grid>
+
+    </Grid>
+  </Grid>
+</Window>
